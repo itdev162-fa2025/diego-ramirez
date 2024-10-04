@@ -1,35 +1,61 @@
 using Domain;
 using Microsoft.AspNetCore.Mvc;
+using Persistence;
 
-namespace API.Controllers
+namespace API.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+
+public class WeatherForecastController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    private static readonly string[] Summaries = new[]{
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    };
+    private readonly ILogger<WeatherForecastController> _logger;
+
+    private readonly DataContext _context;
+
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, DataContext context)
     {
-        private static readonly string[] Summaries = new[]
+        _logger = logger;
+        _context = context;
+    }
+
+    [HttpGet(Name = "GetWeatherForecast")]
+
+    public IEnumerable<WeatherForecast> Get()
+    {
+        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm",
-            "Balmy", "Hot", "Sweltering", "Scorching"
+            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+        })
+        .ToArray();
+    }
+
+    [HttpPost]
+    public ActionResult<WeatherForecast> Create()
+    {
+        Console.WriteLine($"Database path: {_context.DbPath}");
+        Console.WriteLine("Insert new WeatherForecast");
+        var forecast = new WeatherForecast()
+        {
+            Date = new DateOnly(),
+            TemperatureC = 75,
+            Summary = "Warm"
         };
 
-        private readonly ILogger<WeatherForecastController> _logger;
+        _context.WeatherForecasts.Add(forecast);
+        var success = _context.SaveChanges() > 0;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        if (success)
         {
-            _logger = logger;
+            return forecast;
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
-        {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-        }
+        throw new Exception("Error creating WeatherForecast");
     }
+
 }
