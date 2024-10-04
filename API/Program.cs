@@ -1,9 +1,13 @@
+using Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers(); // Add support for controller APIs
+builder.Services.AddControllers();
+builder.Services.AddCors();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<DataContext>();
 
 var app = builder.Build();
 
@@ -14,9 +18,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection(); // Commented out as per your instructions
+// app.UseHttpsRedirection();
 
-// Set up controllers and run the API application
-app.MapControllers(); 
-app.Run(); 
+app.UseCors(policy => policy
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .WithOrigins("http://localhost:4200")
+);
+
+app.MapControllers();
+app.Run();
 
