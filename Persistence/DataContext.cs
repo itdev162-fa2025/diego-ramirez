@@ -1,13 +1,14 @@
 using Domain;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace Persistence
 {
     public class DataContext : DbContext
     {
-        public string DbPath { get; }
         public DbSet<WeatherForecast> WeatherForecasts { get; set; }
+
+        public DbSet<Post> Posts { get; set; }
+        public string DbPath { get; }
 
         public DataContext()
         {
